@@ -34,5 +34,10 @@ RUN python3 -m textblob.download_corpora
 # Expose Tor SOCKS port
 EXPOSE 9050
 
+#Install dos2unix and fix line endings
+RUN apt-get update && \
+    apt-get install -y dos2unix && \
+    dos2unix run_darkdump.sh && 
+    
 # Default command
 CMD ["./run_darkdump.sh"]
