@@ -1,9 +1,11 @@
 # Darkdump v3 - Safe JSON Export Version for Dark Web Analysis
 __version__ = 3
 
+# Prevent writing .pyc files to disk
 import sys
 sys.dont_write_bytecode = True
 
+# Standard imports
 import requests
 from bs4 import BeautifulSoup
 import os
@@ -11,17 +13,20 @@ import argparse
 import random
 import re
 import json
+
+# Custom header rotation (user-agents)
 from headers.agents import Headers
 
+# Natural Language Processing Tools
 import nltk
 nltk.download('stopwords')
 nltk.download('punkt')
-
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 from nltk.probability import FreqDist
 from textblob import TextBlob
 
+# Notice banner
 notice = '''
 Note: 
     This tool is not to be used for illegal purposes.
@@ -30,6 +35,7 @@ Note:
     https://joshschiavone.com - https://github.com/josh0xA
 '''
 
+# ANSI color codes for terminal output
 class Colors:
     W = '\033[0m'
     R = '\033[31m'
@@ -42,10 +48,12 @@ class Colors:
     BOLD = '\033[1m'
     END = '\033[0m'
 
+# Configuration constants
 class Configuration:
     __darkdump_api__ = "https://ahmia.fi/search/?q="
-    __socks5init__ = "socks5h://localhost:9050"
+    __socks5init__ = "socks5h://localhost:9050"  # Tor proxy for .onion access
 
+# Platform detection and Tor connection check
 class Platform:
     def __init__(self, execpltf):
         self.execpltf = execpltf
@@ -67,7 +75,10 @@ class Platform:
             print(f"{Colors.BOLD + Colors.R} Tor is inactive. Cannot scrape.{Colors.END}")
             return False
 
+# Core scraping and analysis logic
 class Darkdump:
+
+    # Clean and normalize HTML text content
     def clean_text(self, html):
         soup = BeautifulSoup(html, 'html.parser')
         text = soup.get_text()
@@ -75,12 +86,14 @@ class Darkdump:
         text = re.sub(r'\s+', ' ', text)
         return re.sub(r'[^a-zA-Z0-9\s]', '', text).strip()
 
+    # Extract top keywords from cleaned text
     def extract_keywords(self, text):
         words = word_tokenize(self.clean_text(text).lower())
         stop_words = set(stopwords.words('english'))
         filtered = [w for w in words if w.isalnum() and w not in stop_words]
         return list(FreqDist(filtered))[:18]
 
+    # Perform basic sentiment analysis and top word frequency
     def analyze_text(self, text):
         words = word_tokenize(text)
         stop_words = set(stopwords.words('english'))
@@ -95,24 +108,30 @@ class Darkdump:
             }
         }
 
+    # Extract <meta> tag values from the page
     def extract_metadata(self, soup):
         return {meta.get('name') or meta.get('property'): meta.get('content')
                 for meta in soup.find_all('meta') if meta.get('name') or meta.get('property')}
 
+    # Extract all hyperlinks
     def extract_links(self, soup):
         return [a['href'] for a in soup.find_all('a', href=True)]
 
+    # Extract all email patterns from the page
     def extract_emails(self, soup):
         return re.findall(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b', soup.get_text())
 
+    # Extract known document types (PDF, DOCX, TXT, etc.)
     def extract_documents(self, soup):
         extensions = ['.pdf', '.docx', '.txt', '.xlsx', '.csv', '.json', '.zip']
         return [a['href'] for a in soup.find_all('a', href=True) if any(a['href'].endswith(ext) for ext in extensions)]
 
+    # Main crawl logic
     def crawl(self, query, amount, use_proxy=False, scrape_sites=False):
         headers = {'User-Agent': random.choice(Headers.user_agents)}
         proxy = {'http': Configuration.__socks5init__, 'https': Configuration.__socks5init__} if use_proxy else {}
 
+        # Initial Ahmia.fi search
         try:
             r = requests.get(Configuration.__darkdump_api__ + query, headers=headers)
             soup = BeautifulSoup(r.content, 'html.parser')
@@ -129,6 +148,7 @@ class Darkdump:
                     "message": f"No dark web entries found for the given keyword: {query}",
                     "results": []
                 }]
+                # Write fallback JSON files
                 with open('darkdump_output.json', 'w') as f:
                     json.dump(no_data, f, indent=2)
                 with open('clean_darkdump_report.json', 'w') as f:
@@ -139,6 +159,7 @@ class Darkdump:
             print(f"{Colors.BOLD + Colors.R} Ahmia fetch error: {e}{Colors.END}")
             return
 
+        # Begin scraping loop
         seen, data = set(), []
         if scrape_sites and not Platform(True).check_tor_connection(proxy):
             return
@@ -153,7 +174,6 @@ class Darkdump:
 
             title = item.find('a').text.strip() if item.find('a') else 'N/A'
             description = item.find('p').text.strip() if item.find('p') else 'N/A'
-
             entry = {'title': title, 'description': description, 'url': url}
 
             if scrape_sites:
@@ -171,10 +191,12 @@ class Darkdump:
 
             data.append(entry)
 
+        # Save raw results
         with open('darkdump_output.json', 'w') as f:
             json.dump(data, f, indent=2)
         print(f"{Colors.BOLD + Colors.C}[*] Results written to darkdump_output.json{Colors.END}")
 
+        # Save simplified summary version
         cleaned_data = []
         for entry in data:
             alert_flag = "\u26a0\ufe0f Possible Data Exposure" if entry.get('emails') or entry.get('documents') else "\u2705 No Risk"
@@ -194,6 +216,7 @@ class Darkdump:
             json.dump(cleaned_data, f, indent=2)
         print(f"{Colors.BOLD + Colors.G}[+] Clean summary written to clean_darkdump_report.json{Colors.END}")
 
+# CLI argument handler
 def darkdump_main():
     Platform(True).clean_screen()
     Platform(True).get_operating_system_descriptor()
@@ -217,5 +240,6 @@ def darkdump_main():
     print(f"[+] Searching for '{args.query}' with limit {args.amount}")
     Darkdump().crawl(query=args.query, amount=args.amount, use_proxy=args.proxy, scrape_sites=args.scrape)
 
+# Entry point
 if __name__ == '__main__':
     darkdump_main()
