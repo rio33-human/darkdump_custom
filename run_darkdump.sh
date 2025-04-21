@@ -21,4 +21,4 @@ echo "[*] Running darkdump.py with target: $TARGET"
 python3 darkdump.py -q "$TARGET" -a 20 --scrape --proxy | tee darkdump_output.txt
 
 # Drop to shell for inspection
-exec /bin/bash
+#exec /bin/bash (if u want stay in shell check the result or anything uncomment this
