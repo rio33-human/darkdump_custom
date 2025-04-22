@@ -23,6 +23,9 @@ until grep -q "Bootstrapped 100% (done): Done" /tmp/tor.log; do
 done
 echo "[+] Tor is fully bootstrapped."
 
+# Create a directory to save the results
+mkdir -p /opt/darkdump/results
+
 # Change into the working directory where the darkdump.py script is located
 cd /opt/darkdump  # Make sure your Dockerfile sets this as the workdir or copies here
 
@@ -33,8 +36,8 @@ cd /opt/darkdump  # Make sure your Dockerfile sets this as the workdir or copies
 # --proxy tells it to use Tor (SOCKS5) as the proxy
 # The `tee` command shows the output in the terminal and saves it to darkdump_output.txt
 echo "[*] Running darkdump.py with target: $TARGET"
-python3 darkdump.py -q "$TARGET" -a 20 --scrape --proxy | tee darkdump_output.txt
+python3 darkdump.py -q "$TARGET" -a 20 --scrape --proxy | tee ./results/darkdump_output.txt
 
 # Keep the container open for manual inspection
 # This replaces the current process with an interactive shell
-exec /bin/bash
+# exec /bin/bash

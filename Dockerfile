@@ -18,8 +18,8 @@ RUN git clone https://github.com/josh0xA/darkdump.git /opt/darkdump
 COPY darkdump.py ./darkdump.py
 
 # Copy your run script
-COPY run_darkdump.sh ./run_darkdump.sh
-RUN chmod +x ./run_darkdump.sh
+COPY run_darkdump.sh /opt/darkdump/run_darkdump.sh 
+RUN chmod +x /opt/darkdump/run_darkdump.sh 
 
 # Copy requirements if modified (optional safety net)
 COPY requirements.txt ./requirements.txt
@@ -37,7 +37,8 @@ EXPOSE 9050
 #Install dos2unix and fix line endings
 RUN apt-get update && \
     apt-get install -y dos2unix && \
-    dos2unix run_darkdump.sh && 
+    dos2unix run_darkdump.sh && \
+    chmod +x run_darkdump.sh
     
 # Default command
-CMD ["./run_darkdump.sh"]
+CMD ["/opt/darkdump/run_darkdump.sh"]

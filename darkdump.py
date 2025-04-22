@@ -149,9 +149,9 @@ class Darkdump:
                     "results": []
                 }]
                 # Write fallback JSON files
-                with open('darkdump_output.json', 'w') as f:
+                with open('./results/darkdump_output.json', 'w') as f:
                     json.dump(no_data, f, indent=2)
-                with open('clean_darkdump_report.json', 'w') as f:
+                with open('./results/clean_darkdump_report.json', 'w') as f:
                     json.dump(no_data, f, indent=2)
                 print(f"{Colors.BOLD + Colors.C}[~] Empty results written to darkdump_output.json and clean_darkdump_report.json{Colors.END}")
                 return
@@ -192,7 +192,7 @@ class Darkdump:
             data.append(entry)
 
         # Save raw results
-        with open('darkdump_output.json', 'w') as f:
+        with open('./results/darkdump_output.json', 'w') as f:
             json.dump(data, f, indent=2)
         print(f"{Colors.BOLD + Colors.C}[*] Results written to darkdump_output.json{Colors.END}")
 
@@ -212,7 +212,7 @@ class Darkdump:
                 "alert": alert_flag
             })
 
-        with open('clean_darkdump_report.json', 'w') as f:
+        with open('./results/clean_darkdump_report.json', 'w') as f:
             json.dump(cleaned_data, f, indent=2)
         print(f"{Colors.BOLD + Colors.G}[+] Clean summary written to clean_darkdump_report.json{Colors.END}")
 
