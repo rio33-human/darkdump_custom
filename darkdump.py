@@ -132,8 +132,8 @@ class Darkdump:
 
         # Normalize query to safe filename
         safe_query = re.sub(r'[^a-zA-Z0-9_\-]', '_', query.strip().lower())
-        output_file = f'darkdump_output_{safe_query}.json'
-        clean_file = f'clean_{safe_query}.json'
+        output_file = f'./results/darkdump_output_{safe_query}.json'
+        clean_file = f'./results/clean_{safe_query}.json'
 
         # Start Ahmia search
         try:
